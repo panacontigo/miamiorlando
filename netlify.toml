@@ -11,6 +11,9 @@
     "./functions/views/**/*.js",
     "./functions/views/layouts/**/*"
   ]
+[[edge_functions]]
+  path = "/*"
+  function = "verify-session"
 
 [[redirects]]
   from = "/api/*"

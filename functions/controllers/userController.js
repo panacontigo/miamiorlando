@@ -1,4 +1,8 @@
 const User = require('../models/user');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const cookie = require('cookie');
+
 
 // Obtener los últimos 10 usuarios
 exports.index = async (event) => {
@@ -113,6 +117,74 @@ exports.delete = async (event) => {
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message })
+    };
+  }
+};
+// Función de login
+exports.login = async (event) => {
+  try {
+    const { username, password } = JSON.parse(event.body);
+    const user = await User.findOne({ username });
+    if (!user) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Credenciales inválidas' })
+      };
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Credenciales inválidas' })
+      };
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Set-Cookie': cookie.serialize('token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV !== 'development',
+          maxAge: 3600,
+          path: '/',
+        }),
+      },
+      body: JSON.stringify({ message: 'Login exitoso' }),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message }),
+    };
+  }
+};
+
+// Verificar sesión
+exports.verifySession = async (event) => {
+  const cookies = cookie.parse(event.headers.cookie || '');
+
+  if (!cookies.token) {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ message: 'No autorizado' }),
+    };
+  }
+
+  try {
+    const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET);
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Autorizado', userId: decoded.id }),
+    };
+  } catch (err) {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ message: 'No autorizado' }),
     };
   }
 };
