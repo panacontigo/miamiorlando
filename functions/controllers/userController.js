@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const cookie = require('cookie');
 
 
+
 // Obtener los últimos 10 usuarios
 exports.index = async (event) => {
   try {
@@ -185,6 +186,83 @@ exports.verifySession = async (event) => {
     return {
       statusCode: 401,
       body: JSON.stringify({ message: 'No autorizado' }),
+    };
+  }
+};
+// Función de login
+exports.login = async (event) => {
+  try {
+    const { username, password } = JSON.parse(event.body);
+    const user = await User.findOne({ username });
+    if (!user) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Credenciales inválidas' })
+      };
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Credenciales inválidas' })
+      };
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Set-Cookie': cookie.serialize('token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV !== 'development',
+          maxAge: 3600,
+          path: '/',
+        }),
+        'Set-Cookie': cookie.serialize('usuario', username, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV !== 'development',
+          maxAge: 3600,
+          path: '/',
+        }),
+      },
+      body: JSON.stringify({ message: 'Login exitoso' }),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message }),
+    };
+  }
+};
+// Función de logout
+exports.logout = async (event) => {
+  try {
+    return {
+      statusCode: 200,
+      headers: {
+        'Set-Cookie': cookie.serialize('token', '', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV !== 'development',
+          maxAge: 0,
+          path: '/',
+        }),
+        'Set-Cookie': cookie.serialize('usuario', '', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV !== 'development',
+          maxAge: 0,
+          path: '/',
+        }),
+      },
+      body: JSON.stringify({ message: 'Logout exitoso' }),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message }),
     };
   }
 };

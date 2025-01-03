@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const userController = require('./controllers/userController');
 
 const mongoUri = 'mongodb+srv://jorge4567:Raiyeris18..@cluster0.lqpe4.mongodb.net/viajes?retryWrites=true&w=majority&appName=Cluster0';
+
+
+
+
+
 // Conectar a MongoDB con configuración mejorada
 mongoose.connect(mongoUri, { 
     useNewUrlParser: true, 

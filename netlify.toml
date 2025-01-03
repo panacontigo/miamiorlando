@@ -11,10 +11,11 @@
     "./functions/views/**/*.js",
     "./functions/views/layouts/**/*"
   ]
+ 
 [[edge_functions]]
-  path = "/*"
-  function = "verify-session"
-
+  path = "/besitos"
+  function = "hello"
+  
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/index"
