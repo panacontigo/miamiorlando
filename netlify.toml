@@ -13,7 +13,7 @@
   ]
  
 [[edge_functions]]
-  path = "/besitos"
+  path = "/*"
   function = "hello"
   
 [[redirects]]

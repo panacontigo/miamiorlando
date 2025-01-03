@@ -41,6 +41,7 @@
       });
 
       const result = await response.json();
+      console.log(JSON.stringify(result));
       if (result.message === 'Login exitoso') {
         window.location.href = '/';
       } else {
