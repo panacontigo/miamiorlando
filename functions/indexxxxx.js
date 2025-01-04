@@ -1,8 +1,12 @@
 const mongoose = require('mongoose');
 const userController = require('./controllers/userController');
-
+const serviceController = require('./controllers/serviceController');
+const productController = require('./controllers/productController');
+const categoryController = require('./controllers/categoryController');
+const configuracionController = require('./controllers/configuracionController');
+const entradaController = require('./controllers/entradaController');
+const salidaController = require('./controllers/salidaController');
 const mongoUri = 'mongodb+srv://jorge4567:Raiyeris18..@cluster0.lqpe4.mongodb.net/viajes?retryWrites=true&w=majority&appName=Cluster0';
-
 
 // Conectar a MongoDB con configuración mejorada
 mongoose.connect(mongoUri, { 
@@ -29,7 +33,13 @@ mongoose.connection.on('reconnected', () => {
     console.log('MongoDB reconnected');
 });
 const controllers = {
-  users: userController
+  users: userController,
+  services: serviceController,
+  products: productController,
+  categories: categoryController,
+  configuracion:configuracionController,
+  entradas: entradaController,
+  salidas: salidaController
 };
 
 // Agregar headers CORS a la respuesta
