@@ -11,12 +11,11 @@
     "./functions/views/**/*.js",
     "./functions/views/layouts/**/*"
   ]
-
+ 
 [[edge_functions]]
-  path = "/ghjgghj"
+  path = "/*"
   function = "hello"
-
-
+  
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/index"
