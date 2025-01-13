@@ -1,0 +1,10 @@
+1-100 tabla acanalada
+100 - 200 estatente papaeleria 
+200-300 estatnte 01
+300-400 vitrina 
+400-500 tabla acanalada
+500-600 estante 01
+600 700 estante 02
+700 800  estante 03
+800 900  visuteria
+900 tabl acanalada

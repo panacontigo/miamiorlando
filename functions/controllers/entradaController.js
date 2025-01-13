@@ -5,6 +5,8 @@ const Product = require('../models/product');
 const Configuracion = require('../models/configuracion'); 
 const moment = require('moment-timezone');
 
+
+
 exports.index = async (event) => {
     try {
         const queryParams = event.queryStringParameters || {};

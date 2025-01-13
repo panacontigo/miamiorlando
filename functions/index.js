@@ -1,3 +1,6 @@
+
+
+
 const mongoose = require('mongoose');
 const userController = require('./controllers/userController');
 const productController = require('./controllers/productController');
@@ -7,14 +10,15 @@ const entradaController = require('./controllers/entradaController');
 const salidaController = require('./controllers/salidaController');
 const mongoUri = 'mongodb+srv://jorge4567:Raiyeris18..@cluster0.lqpe4.mongodb.net/viajes?retryWrites=true&w=majority&appName=Cluster0';
 
-// Conectar a MongoDB con configuración mejorada
+
+
 mongoose.connect(mongoUri, { 
     useNewUrlParser: true, 
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 15000,    // Aumentar el timeout a 15 segundos
-    socketTimeoutMS: 45000,             // Timeout para operaciones
+    socketTimeoutMS: 50000,             // Timeout para operaciones
     maxPoolSize: 50,                    // Máximo de conexiones simultáneas
-    wtimeoutMS: 2500,                  // Timeout para operaciones de escritura
+    wtimeoutMS: 3500,                  // Timeout para operaciones de escritura
     connectTimeoutMS: 15000            // Timeout para la conexión inicial
 }).then(() => console.log('MongoDB conectado'))
   .catch(err => console.error('Error de conexión MongoDB:', err));

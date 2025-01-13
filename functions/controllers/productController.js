@@ -4,8 +4,8 @@ const Product = require('../models/product');
 const cloudinary = require('../config/cloudinary');
 const { getAllUbicaciones } = require('../utils/ubicaciones');
 const Configuracion = require('../models/configuracion'); // Asegúrate de importar el modelo de configuración
+const productsData = require('../utils/imports'); // Importar el archivo JSON
 
-const productsData = require('../utils/actfile'); // Importar el archivo JSON
 
 exports.import = async (event) => {
     try {
@@ -21,8 +21,8 @@ exports.import = async (event) => {
                     code: productData.codigo,
                     name: productData.descripcion,
                     stock: productData.cantidad,
-                    price: productData.venta,
-                    location: productData.ubicacion,
+                    price: productData.precio,
+                    location: "BISUTERIA",
                     cost:productData.costo
                 });
                 // Calcular y actualizar el precio en bolívares
@@ -131,8 +131,7 @@ exports.index = async (event) => {
 
         const totalPages = Math.ceil(total / limit);
 
-        const html = await ejs.renderFile(
-            path.join(process.env.LAMBDA_TASK_ROOT, './functions/views/productos/index.ejs'),
+        const html = await ejs.renderFile(path.join(process.env.LAMBDA_TASK_ROOT, './functions/views/productos/index.ejs'),
             {
                 products,
                 title: 'Lista de Productos',

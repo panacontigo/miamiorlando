@@ -15,7 +15,7 @@
                 <% if(users && users.length > 0) { %>
                     <% users.forEach(function(user) { %>
                         <tr>
-                            <td><%= user.name %></td>
+                            <td><%= user.nombre %></td>
                             <td><%= user.email %></td>
                             <td>
                                 <button onclick="verUsuario('<%= user._id %>')" class="btn btn-info btn-sm">
