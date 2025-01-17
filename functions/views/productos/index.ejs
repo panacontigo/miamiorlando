@@ -303,6 +303,15 @@ document.addEventListener('DOMContentLoaded', function() {
 <% if (pagination.totalPages > 1) { %>
     <nav aria-label="Page navigation" class="mt-4">
         <ul class="pagination justify-content-center">
+            <!-- Botón "Ver 50 Anterior" -->
+            <% if (pagination.currentRange > 1) { %>
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="<%= (pagination.currentRange - 2) * pagination.pagesPerRange + 1 %>">
+                        Ver 50 Anterior
+                    </a>
+                </li>
+            <% } %>
+
             <!-- Botón Anterior -->
             <li class="page-item <%= pagination.page <= 1 ? 'disabled' : '' %>">
                 <a class="page-link" href="#" data-page="<%= pagination.page - 1 %>">
@@ -311,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </li>
 
             <!-- Números de página -->
-            <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+            <% for(let i = (pagination.currentRange - 1) * pagination.pagesPerRange + 1; i <= pagination.currentRange * pagination.pagesPerRange && i <= pagination.totalPages; i++) { %>
                 <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
                     <a class="page-link" href="#" data-page="<%= i %>"><%= i %></a>
                 </li>
@@ -323,6 +332,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>
+
+            <!-- Botón "Ver 50 Más" -->
+            <% if (pagination.currentRange < pagination.totalRanges) { %>
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="<%= pagination.currentRange * pagination.pagesPerRange + 1 %>">
+                        Ver 50 Más
+                    </a>
+                </li>
+            <% } %>
         </ul>
     </nav>
 <% } %>
+

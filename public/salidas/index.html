@@ -234,11 +234,11 @@
                 loadSalidas();
             } else {
                 const error = await response.json();
-                throw new Error(error.message);
+                throw new Error(error.error);
             }
         } catch (error) {
             console.error('Error creating salida:', error);
-            ajaxHandler.showError('Error al crear la salida: ' + error.message);
+            ajaxHandler.showError('Error al crear la salida: ' + error);
         }
     }
 
@@ -271,7 +271,7 @@
                 loadSalidas();
             } else {
                 const error = await response.json();
-                throw new Error(error.message);
+                throw new Error(error.error);
             }
         } catch (error) {
             console.error('Error updating salida:', error);
@@ -300,6 +300,9 @@
             alert('Error al cargar formulario de edición: ' + error.message);
         }
     }
+
+
+
 
     async function eliminarSalida(id) {
         try {

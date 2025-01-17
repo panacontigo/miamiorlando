@@ -151,11 +151,28 @@ exports.create = async (event) => {
         if (event.httpMethod === 'POST') {
             const data = JSON.parse(event.body);
             
+
             // Validaciones adicionales
             if (!data.id_producto) {
                 return {
                     statusCode: 400,
                     body: JSON.stringify({ error: 'Producto es requerido' })
+                };
+            }
+
+            // Verificar stock disponible
+            const producto = await Product.findById(data.id_producto);
+            if (!producto) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: 'Producto no encontrado' })
+                };
+            }
+
+            if (data.cantidad > producto.stock) {
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: 'La cantidad solicitada es mayor al stock disponible' })
                 };
             }
 
@@ -244,6 +261,21 @@ exports.confirmar = async (event) => {
             };
         }
 
+        // Verificar stock disponible nuevamente antes de confirmar
+        const producto = await Product.findById(salida.id_producto);
+        if (!producto) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: 'Producto no encontrado' })
+            };
+        }
+
+        if (salida.cantidad > producto.stock) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: 'La cantidad solicitada es mayor al stock disponible' })
+            };
+        }
         // Cambiar el estado de la salida a "COMPLETADA"
         salida.status = 'COMPLETADA';
         await salida.save();
@@ -270,8 +302,90 @@ exports.confirmar = async (event) => {
         };
     }
 };
-// Método para confirmar todas las salidas pendientes
+
 exports.confirmartodas = async (event) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        // Obtener todas las salidas en estado PENDIENTE
+        const salidasPendientes = await Salida.find({ status: 'PENDIENTE' }).session(session);
+
+        if (salidasPendientes.length === 0) {
+            await session.abortTransaction();
+            session.endSession();
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: 'No hay salidas pendientes para confirmar' })
+            };
+        }
+
+        const productosActualizados = {};
+
+        // Verificar el stock disponible para cada salida pendiente
+        for (const salida of salidasPendientes) {
+            const producto = await Product.findById(salida.id_producto).session(session);
+
+            if (!producto) {
+                await session.abortTransaction();
+                session.endSession();
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: `Producto con ID ${salida.id_producto} no encontrado` })
+                };
+            }
+
+            if (salida.cantidad > producto.stock) {
+                await session.abortTransaction();
+                session.endSession();
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ 
+                        error: `Stock insuficiente para el producto ${producto.name} (ID: ${producto._id})` 
+                    })
+                };
+            }
+
+            // Guardar la reducción del stock en un objeto temporal
+            if (!productosActualizados[producto._id]) {
+                productosActualizados[producto._id] = producto.stock;
+            }
+            productosActualizados[producto._id] -= salida.cantidad;
+        }
+
+        // Confirmar cada salida y actualizar el stock
+        for (const salida of salidasPendientes) {
+            const producto = await Product.findById(salida.id_producto).session(session);
+
+            // Cambiar el estado de la salida a "COMPLETADA"
+            salida.status = 'COMPLETADA';
+            await salida.save({ session });
+
+            // Actualizar stock del producto
+            producto.stock = productosActualizados[producto._id];
+            await producto.save({ session });
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'Todas las salidas pendientes han sido confirmadas' })
+        };
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error('Error al confirmar todas las salidas:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
+};
+
+// Método para confirmar todas las salidas pendientes
+/*
+exports.confirmartodasx = async (event) => {
     try {
         // Obtener todas las salidas en estado PENDIENTE
         const salidasPendientes = await Salida.find({ status: 'PENDIENTE' });
@@ -307,7 +421,7 @@ exports.confirmartodas = async (event) => {
         };
     }
 };
-
+*/
 // Método para eliminar una salida
 exports.delete = async (event) => {
     try {
@@ -351,6 +465,109 @@ exports.delete = async (event) => {
     }
 };
 
+
+exports.edit = async (event) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const { id } = event.pathParameters;
+
+        if (event.httpMethod === 'GET') {
+            const salida = await Salida.findById(id).populate('id_producto', 'name code price').session(session);
+
+            if (!salida) {
+                await session.abortTransaction();
+                session.endSession();
+                return {
+                    statusCode: 404,
+                    body: JSON.stringify({ error: 'Salida no encontrada' })
+                };
+            }
+
+            const html = await ejs.renderFile(
+                path.join(process.env.LAMBDA_TASK_ROOT, './functions/views/salidas/edit.ejs'),
+                {
+                    salida,
+                    title: 'Editar Salida'
+                }
+            );
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'text/html' },
+                body: html
+            };
+        }
+
+        if (event.httpMethod === 'PUT') {
+            const data = JSON.parse(event.body);
+            const salida = await Salida.findById(id).session(session);
+
+            if (!salida) {
+                await session.abortTransaction();
+                session.endSession();
+                return {
+                    statusCode: 404,
+                    body: JSON.stringify({ error: 'Salida no encontrada' })
+                };
+            }
+
+            const producto = await Product.findById(salida.id_producto).session(session);
+            if (!producto) {
+                await session.abortTransaction();
+                session.endSession();
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: 'Producto no encontrado' })
+                };
+            }
+
+            // Verificar stock disponible
+            const cantidadDiferencia = data.cantidad - salida.cantidad;
+            if (cantidadDiferencia > 0 && cantidadDiferencia > producto.stock) {
+                await session.abortTransaction();
+                session.endSession();
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: 'La cantidad solicitada es mayor al stock disponible' })
+                };
+            }
+
+            // Actualizar stock del producto
+            producto.stock -= cantidadDiferencia;
+            await producto.save({ session });
+
+            // Actualizar solo la cantidad de la salida
+            salida.cantidad = data.cantidad;
+            await salida.save({ session });
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: 'Cantidad de salida actualizada exitosamente',
+                    salida
+                })
+            };
+        }
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error('Error en edit:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
+};
+
+/*
 exports.edit = async (event) => {
     try {
         const { id } = event.pathParameters;
@@ -411,7 +628,7 @@ exports.edit = async (event) => {
         return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
     }
 };
-
+*/
 exports.obtenersalidasporfecha = async (event) => {
     try {
         const queryParams = event.queryStringParameters || {};

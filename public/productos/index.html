@@ -180,6 +180,28 @@
         }
 
         // Actualizar los enlaces de paginación
+        /*function updatePaginationLinks() {
+            document.querySelectorAll('.pagination .page-link').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    if (page) {
+                        // Obtener los filtros actuales
+                        const filters = {
+                            name: document.getElementById('filterName')?.value?.trim(),
+                            category: document.getElementById('filterCategory')?.value?.trim(),
+                            minPrice: document.getElementById('filterMinPrice')?.value,
+                            maxPrice: document.getElementById('filterMaxPrice')?.value,
+                            stock: document.getElementById('filterStock')?.checked,
+                            sortBy: document.getElementById('sortBy')?.value,
+                            sortOrder: document.getElementById('sortOrder')?.value
+                        };
+                        loadProducts(parseInt(page), filters);
+                    }
+                });
+            });
+        }*/
+        
         function updatePaginationLinks() {
             document.querySelectorAll('.pagination .page-link').forEach(link => {
                 link.addEventListener('click', function (e) {
@@ -398,12 +420,13 @@
             try {
                 ajaxHandler.showLoading('Cargando detalles...');
 
-                const response = await fetch(`/api/products/show/${id}`);
+                const response = await fetch(`/api/products/movimientos/${id}`);
                 if (!response.ok) throw new Error('Error al cargar los detalles');
 
-                const product = await response.json();
-
-                Swal.fire({
+                const html = await response.text();
+                document.getElementById('products-container').innerHTML = html;
+                ajaxHandler.showSuccess('Listo');
+              /*  Swal.fire({
                     title: product.name,
                     html: `
                 <div class="text-start">
@@ -422,7 +445,7 @@
             `,
                     confirmButtonText: 'Cerrar',
                     width: '600px'
-                });
+                });*/
 
             } catch (error) {
                 ajaxHandler.showError('Error al cargar los detalles: ' + error.message);
