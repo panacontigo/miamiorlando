@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* Evitar scroll en el body */
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #343a40;
+      color: white;
+      transition: transform 0.3s ease, width 0.3s ease;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 1000;
+      height: 2500px; /* Altura fija para el sidebar */
+    }
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      padding: 10px;
+      display: block;
+    }
+    .sidebar a:hover {
+      background-color: #495057;
+    }
+    .content {
+      margin-left: 250px;
+      transition: margin-left 0.3s ease;
+      flex: 1;
+      overflow: hidden; /* Evitar scroll en el contenedor */
+      padding: 20px;
+      height: 2500px; /* Altura fija para el contenedor */
+    }
+    .sidebar-closed {
+      transform: translateX(-100%);
+    }
+    .content-expanded {
+      margin-left: 0;
+    }
+    .menu-toggle {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1001;
+    }
+    .menu-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: white;
+      background: none;
+      border: none;
+    }
+    .iframe-container {
+      height: 100%; /* Ocupar todo el alto del contenedor */
+      overflow: hidden; /* Evitar scroll en el contenedor del iframe */
+    }
+    .iframe-container iframe {
+      width: 100%;
+      height: 100%; /* Ocupar todo el alto del contenedor del iframe */
+      border: none;
+      overflow: hidden; /* Evitar scroll en el iframe */
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+      }
+      .content {
+        margin-left: 0;
+        height: auto; /* Ajustar altura para dispositivos móviles */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar" id="sidebar">
+    <button class="menu-close" onclick="toggleMenu()">✖</button>
+    <h4 class="text-center">Menu</h4>
+    <a href="#" onclick="loadIframe('productos/index.html')">Productos</a>
+    <a href="#" onclick="loadIframe('entradas/index.html')">Entradas</a>
+    <a href="#" onclick="loadIframe('salidas/index.html')">Salidas</a>
+    <a href="#" onclick="loadIframe('productos/puntodeventa.html')">Punto de Venta</a>
+    <a href="#" onclick="loadIframe('productos/puntodecompra.html')">Punto de Compra</a>
+    <a href="#" onclick="loadIframe('configuracion/index.html')">Configuración</a>
+    <a href="#" onclick="cerrarSesion()">Cerrar Sesion</a>
+  </div>
+  <button class="btn btn-primary menu-toggle" onclick="toggleMenu()" id="menuToggle" style="display:none;">☰</button>
+  <div class="content iframe-container" id="content">
+    <iframe id="contentFrame" src="productos/index.html"></iframe>
+  </div>
+
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+   <script>
+
+    function toggleMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const content = document.getElementById('content');
+      const menuToggle = document.getElementById('menuToggle');
+
+      if (sidebar.classList.contains('sidebar-closed')) {
+        sidebar.classList.remove('sidebar-closed');
+        content.classList.remove('content-expanded');
+        menuToggle.style.display = 'none';
+      } else {
+        sidebar.classList.add('sidebar-closed');
+        content.classList.add('content-expanded');
+        menuToggle.style.display = 'block';
+      }
+    }
+
+    function loadIframe(url) {
+      document.getElementById('contentFrame').src = url;
+    }
+
+    function cerrarSesion() {
+      fetch('/api/users/logout', {
+        method: 'POST',
+        credentials: 'same-origin'
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.href = '/login.html'; // Redirigir a la página de inicio de sesión
+        } else {
+          alert('Error al cerrar sesión');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error al cerrar sesión');
+      });
+    }
+
+    // Close the menu when clicking outside of it (for mobile view)
+    document.addEventListener('click', function(event) {
+      const sidebar = document.getElementById('sidebar');
+      const toggleButton = document.querySelector('.menu-toggle');
+      if (!sidebar.contains(event.target) && !toggleButton.contains(event.target) && window.innerWidth <= 768) {
+        sidebar.classList.add('sidebar-closed');
+        document.getElementById('content').classList.add('content-expanded');
+        toggleButton.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

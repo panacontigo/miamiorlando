@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .menu {
+            margin-top: 50px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="menu">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <div class="navbar-nav mx-auto">
+                        <a class="nav-link mx-3" href="#" onclick="loadUsers(); return false;">
+                            <i class="fas fa-list"></i> Lista de Usuarios
+                        </a>
+                        <a class="nav-link mx-3" href="#" onclick="loadCreateForm(); return false;">
+                            <i class="fas fa-user-plus"></i> Crear Usuario
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div id="users-container" class="table-responsive"></div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="/js/handlersAjax.js"></script>
+    <script>
+        // Inicializar el manejador
+        const ajaxHandler = new AjaxHandler('users-container');
+
+        // Funciones específicas para usuarios
+        function loadUsers(page = 1) {
+            ajaxHandler.loadList('/api/users/index', page);
+        }
+
+        function loadCreateForm() {
+            ajaxHandler.loadForm('/api/users/create');
+        }
+
+        async function handleSubmit(event) {
+            try {
+                await ajaxHandler.handleSubmit(event, '/api/users/create');
+                loadUsers();
+            } catch (error) {
+                // El error ya fue manejado por ajaxHandler
+            }
+        }
+
+        function verUsuario(id) {
+            ajaxHandler.viewDetails(`/api/users/${id}`);
+        }
+
+        async function editarUsuario(id) {
+            ajaxHandler.loadForm(`/api/users/edit/${id}`);
+        }
+
+        async function handleUpdate(event, id) {
+            try {
+                await ajaxHandler.handleSubmit(event, `/api/users/edit/${id}`, 'PUT');
+                loadUsers();
+            } catch (error) {
+                // El error ya fue manejado por ajaxHandler
+            }
+        }
+
+        function eliminarUsuario(id) {
+            ajaxHandler.deleteItem(`/api/users/delete/${id}`, '¿Estás seguro de que deseas eliminar este usuario?')
+                .then(() => loadUsers())
+                .catch(() => {}); // Los errores ya fueron manejados por ajaxHandler
+        }
+
+        document.addEventListener('DOMContentLoaded', loadUsers);
+    </script>
+</body>
+</html>
+
+</html>
